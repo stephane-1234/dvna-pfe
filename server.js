@@ -16,8 +16,9 @@ const app = express();
 // VULN-1 (Gitleaks) : Secret JWT hardcodé en clair
 // CORRECTION : remplacer par process.env.JWT_SECRET
 // ============================================================
-const JWT_SECRET    = "dvna-pfe-super-secret-jwt-2024";
-const ADMIN_API_KEY = "sk-dvna-admin-4f8b2c1d9e3a7f6b";
+// APRÈS (corrigé)
+const JWT_SECRET    = process.env.JWT_SECRET    || "changeme";
+const ADMIN_API_KEY = process.env.ADMIN_API_KEY || "changeme";
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
