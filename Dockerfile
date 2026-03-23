@@ -1,11 +1,4 @@
-# DVNA-PFE — Dockerfile VULNERABLE (intentionnel)
-# Cibles : Trivy (CVEs image), Checkov (misconfigurations)
-
-# VULN-Trivy : image non epinglee avec CVEs dans les paquets OS
 FROM node:18
-
-# VULN-Checkov CKV_DOCKER_2 : pas de HEALTHCHECK
-# VULN-Checkov CKV_DOCKER_8 : pas d'USER non-root (tourne en root)
 
 WORKDIR /app
 
@@ -14,8 +7,14 @@ RUN npm install
 
 COPY . .
 
+# CORRECTION 1 : Utilisateur non-root
+RUN useradd -m appuser
+USER appuser
+
 EXPOSE 9090
 
-# Pas de USER -> tourne en root
-# Pas de HEALTHCHECK -> Checkov alerte
+# CORRECTION 2 : Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:9090', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+
 CMD ["node", "server.js"]
