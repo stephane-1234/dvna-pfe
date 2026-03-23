@@ -5,7 +5,7 @@ const session    = require('express-session');
 const bodyParser = require('body-parser');
 const path       = require('path');
 const { exec }   = require('child_process');
-const serialize  = require('node-serialize');
+//const serialize  = require('node-serialize');
 const xmldom     = require('xmldom');
 const xpath      = require('xpath');
 const helmet     = require('helmet');
@@ -132,7 +132,7 @@ app.get('/deserialize', requireAuth, (req, res) => {
 
 app.post('/deserialize', requireAuth, (req, res) => {
   try {
-    const data = serialize.unserialize(req.body.payload);
+    const data = JSON.parse(req.body.payload);
     res.render('deserialize', { user: req.session.user, result: JSON.stringify(data) });
   } catch (e) {
     res.render('deserialize', { user: req.session.user, result: 'Erreur: ' + e.message });
