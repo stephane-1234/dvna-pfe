@@ -19,6 +19,8 @@ const app = express();
 const JWT_SECRET    = "dvna-pfe-super-secret-jwt-2024";
 const ADMIN_API_KEY = "sk-dvna-admin-4f8b2c1d9e3a7f6b";
 
+app.use(helmet());
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.urlencoded({ extended: true }));
