@@ -1,0 +1,7 @@
+node_modules/
+.env
+*.log
+zap-report/
+zap-report-fixed/
+odc-report/
+gitleaks.exe

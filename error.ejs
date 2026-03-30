@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DVNA-PFE — Erreur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+<main class="main-content">
+  <div class="card">
+    <div class="page-title">Erreur</div>
+    <div class="alert alert-error" style="margin-top:16px;"><%= message %></div>
+    <div style="margin-top:16px;">
+      <a href="/" class="btn btn-secondary">&#8592; Retour a l'accueil</a>
+    </div>
+  </div>
+</main>
+<%- include('partials/footer') %>
+</body>
+</html>

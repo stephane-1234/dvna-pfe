@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DVNA-PFE — Dashboard Securise</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+<main class="main-content">
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-subtitle">Connecte en tant que <strong><%= user.username %></strong> — Role : <%= user.role %></div>
+      </div>
+      <span class="vuln-badge" style="background:rgba(45,186,114,.15);border-color:rgba(45,186,114,.3);color:#2dba72;">Version Securisee</span>
+    </div>
+    <div class="alert alert-success">
+      Toutes les vulnerabilites ont ete corrigees dans cette version. Les modules ci-dessous fonctionnent de maniere securisee.
+    </div>
+  </div>
+
+  <div style="font-size:13px; color:var(--text-dim); font-weight:500; text-transform:uppercase; letter-spacing:.04em; margin-bottom:12px;">
+    Modules — Versions corrigees
+  </div>
+
+  <div class="vuln-grid">
+
+    <a href="/ping" class="vuln-card" style="border-color:rgba(45,186,114,.2);">
+      <div class="vuln-card-num" style="color:var(--green);">FIX-01</div>
+      <div class="vuln-card-title">Ping Tool</div>
+      <div class="vuln-card-tool" style="color:var(--green);">Semgrep — SAST corrige</div>
+      <div class="vuln-card-desc">spawn() avec validation IPv4 stricte. Plus d'injection de commande possible.</div>
+    </a>
+
+    <a href="/search" class="vuln-card" style="border-color:rgba(45,186,114,.2);">
+      <div class="vuln-card-num" style="color:var(--green);">FIX-02</div>
+      <div class="vuln-card-title">Recherche utilisateur</div>
+      <div class="vuln-card-tool" style="color:var(--green);">OWASP ZAP — DAST corrige</div>
+      <div class="vuln-card-desc">Echappement automatique via &lt;%= %&gt;. XSS impossible.</div>
+    </a>
+
+    <a href="/notes" class="vuln-card" style="border-color:rgba(45,186,114,.2);">
+      <div class="vuln-card-num" style="color:var(--green);">FIX-03</div>
+      <div class="vuln-card-title">Notes privees</div>
+      <div class="vuln-card-tool" style="color:var(--green);">OWASP ZAP — IDOR corrige</div>
+      <div class="vuln-card-desc">Verification d'appartenance systematique. Acces refuse si la note n'est pas la votre.</div>
+    </a>
+
+    <a href="/deserialize" class="vuln-card" style="border-color:rgba(45,186,114,.2);">
+      <div class="vuln-card-num" style="color:var(--green);">FIX-04</div>
+      <div class="vuln-card-title">Deserialisation</div>
+      <div class="vuln-card-tool" style="color:var(--green);">npm audit — SCA corrige</div>
+      <div class="vuln-card-desc">node-serialize supprime. JSON.parse() uniquement — pas d'execution de code.</div>
+    </a>
+
+    <a href="/xml" class="vuln-card" style="border-color:rgba(45,186,114,.2);">
+      <div class="vuln-card-num" style="color:var(--green);">FIX-05</div>
+      <div class="vuln-card-title">Parser XML</div>
+      <div class="vuln-card-tool" style="color:var(--green);">Semgrep — XXE corrige</div>
+      <div class="vuln-card-desc">@xmldom/xmldom securise + rejet explicite de DOCTYPE et ENTITY.</div>
+    </a>
+
+    <div class="vuln-card" style="border-color:rgba(45,186,114,.2);cursor:default;">
+      <div class="vuln-card-num" style="color:var(--green);">FIX-06</div>
+      <div class="vuln-card-title">En-tetes HTTP</div>
+      <div class="vuln-card-tool" style="color:var(--green);">OWASP ZAP — Headers corriges</div>
+      <div class="vuln-card-desc">helmet() active : CSP, HSTS, X-Frame-Options, COEP, Referrer-Policy, Permissions-Policy.</div>
+    </div>
+
+  </div>
+
+</main>
+<%- include('partials/footer') %>
+</body>
+</html>

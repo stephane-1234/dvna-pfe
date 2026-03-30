@@ -40,12 +40,12 @@ pipeline {
             steps {
                 echo '=== Scan de l image Docker ==='
                 bat '''
-                    docker build -t dvna-pfe:pipeline .
+                    docker build -t dvna-pfe-secure:pipeline .
                     docker run --rm ^
                     -v //var/run/docker.sock://var/run/docker.sock ^
                     aquasec/trivy:latest image ^
                     --severity HIGH,CRITICAL ^
-                    dvna-pfe:pipeline || exit 0
+                    dvna-pfe-secure:pipeline || exit 0
                 '''
             }
         }
@@ -73,7 +73,7 @@ pipeline {
                     ghcr.io/zaproxy/zaproxy:stable ^
                     zap-baseline.py ^
                     -t http://host.docker.internal:9090 ^
-                    -r zap-pipeline.html ^
+                    -r zap-pipeline-secure.html ^
                     -I || exit 0
                 '''
             }
@@ -82,10 +82,10 @@ pipeline {
 
     post {
         always {
-            echo '=== Pipeline DevSecOps termine ==='
+            echo '=== Pipeline DevSecOps SECURE termine ==='
         }
         success {
-            echo '=== Tous les scans executes avec succes ==='
+            echo '=== Tous les scans executes avec succes — version securisee ==='
         }
         failure {
             echo '=== Des erreurs ont ete detectees ==='

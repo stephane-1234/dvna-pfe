@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DVNA-PFE — XML Parser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+<main class="main-content">
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="page-title">Parser XML</div>
+        <div class="page-subtitle">Soumettez un document XML a analyser</div>
+      </div>
+      <span class="vuln-badge" style="background:rgba(45,186,114,.15);border-color:rgba(45,186,114,.3);color:#2dba72;">XXE — CORRIGE</span>
+    </div>
+
+    <div class="alert alert-success">
+      <strong>FIX-05 :</strong> <code>xmldom</code> vulnerable remplace par <code>@xmldom/xmldom</code>.<br>
+      Rejet explicite de <code>DOCTYPE</code> et <code>ENTITY</code> — les entites externes sont impossibles.
+    </div>
+
+    <form method="POST" action="/xml">
+      <div class="form-group">
+        <label>Document XML (DOCTYPE/ENTITY interdits)</label>
+        <textarea name="xml" rows="6" placeholder="<root><value>test</value></root>"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Parser</button>
+    </form>
+
+    <% if (result) { %>
+      <div class="terminal-output"><%= result %></div>
+    <% } %>
+  </div>
+
+  <div class="card">
+    <div style="font-size:12px; color:var(--text-dim); font-weight:500; text-transform:uppercase; letter-spacing:.04em; margin-bottom:12px;">Correction appliquee — server.js</div>
+    <div class="terminal-output" style="color:var(--yellow);">// AVANT (vulnerable)
+const DOMParser = xmldom.DOMParser; // xmldom 0.1.31 vulnerable
+const doc = new DOMParser().parseFromString(req.body.xml, 'text/xml');</div>
+    <div style="margin-top:12px; padding:12px 16px; background:rgba(45,186,114,.07); border:1px solid rgba(45,186,114,.2); border-radius:5px;">
+      <div style="font-size:12px; color:var(--green); font-weight:500; margin-bottom:6px;">APRES (corrige)</div>
+      <div class="terminal-output" style="margin-top:0; color:var(--green);">// Rejet de DOCTYPE/ENTITY avant parsing
+if (/<!DOCTYPE|<!ENTITY|SYSTEM\s+["']/i.test(xmlInput))
+  return res.render('xml', { result: 'DOCTYPE/ENTITY interdit' });
+
+// @xmldom/xmldom — version securisee
+const { DOMParser } = require('@xmldom/xmldom');
+const doc = new DOMParser().parseFromString(xmlInput, 'text/xml');</div>
+    </div>
+  </div>
+
+</main>
+<%- include('partials/footer') %>
+</body>
+</html>

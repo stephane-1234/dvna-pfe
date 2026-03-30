@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DVNA-PFE — Version Securisee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+<main class="main-content">
+
+  <div class="hero">
+    <div class="hero-logo">&#9632;</div>
+    <h1 class="hero-title">DVNA-PFE — Version Securisee</h1>
+    <p class="hero-sub">Toutes les vulnerabilites ont ete corrigees. Cette version demontre l'etat apres application des correctifs DevSecOps.</p>
+    <div class="hero-warn" style="border-color:rgba(45,186,114,.4);background:rgba(45,186,114,.07);color:#2dba72;">
+      &#10003; Pipeline DevSecOps — 0 vulnerabilite detectee
+    </div>
+    <br><br>
+    <% if (user) { %>
+      <a href="/dashboard" class="btn btn-primary">Acceder au dashboard</a>
+    <% } else { %>
+      <a href="/login" class="btn btn-primary">Se connecter</a>
+    <% } %>
+  </div>
+
+  <div class="card">
+    <div style="margin-bottom:16px; font-size:13px; color:var(--text-dim); font-weight:500; text-transform:uppercase; letter-spacing:.04em;">Corrections appliquees</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Outil</th>
+          <th>Vulnerabilite corrigee</th>
+          <th>Correction</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="color:var(--green);">&#10003; Gitleaks</td><td>Secret JWT hardcode</td><td>Variables d'environnement (.env)</td></tr>
+        <tr><td style="color:var(--green);">&#10003; Semgrep</td><td>Command Injection exec()</td><td>spawn() + validation IPv4 stricte</td></tr>
+        <tr><td style="color:var(--green);">&#10003; Semgrep</td><td>Cookie non securise</td><td>httpOnly, sameSite, nom custom</td></tr>
+        <tr><td style="color:var(--green);">&#10003; npm audit</td><td>node-serialize CVE critique</td><td>Supprime — JSON.parse() uniquement</td></tr>
+        <tr><td style="color:var(--green);">&#10003; Trivy</td><td>Image Docker avec CVEs</td><td>node:22-alpine3.21</td></tr>
+        <tr><td style="color:var(--green);">&#10003; Checkov</td><td>Container en root / sans HEALTHCHECK</td><td>USER appuser + HEALTHCHECK</td></tr>
+        <tr><td style="color:var(--green);">&#10003; OWASP ZAP</td><td>14 headers de securite absents</td><td>helmet() active (CSP, HSTS, COEP...)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+<%- include('partials/footer') %>
+</body>
+</html>

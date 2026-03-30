@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DVNA-PFE — Note #<%= note.id %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<%- include('partials/nav') %>
+<main class="main-content">
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="page-title">Note #<%= note.id %></div>
+        <div class="page-subtitle">
+          Proprietaire : userId = <%= note.userId %> —
+          Connecte : <%= user.username %> (id=<%= user.id %>)
+        </div>
+      </div>
+      <span class="vuln-badge" style="background:rgba(45,186,114,.15);border-color:rgba(45,186,114,.3);color:#2dba72;">IDOR — Acces verifie</span>
+    </div>
+
+    <div class="alert alert-success">
+      Acces autorise — Cette note vous appartient (userId = <%= user.id %>) ou vous etes administrateur.
+    </div>
+
+    <div style="background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:20px; margin-top:8px;">
+      <div style="font-size:18px; font-weight:500; color:#fff; margin-bottom:10px;"><%= note.title %></div>
+      <div style="font-size:14px; color:var(--text); line-height:1.6;"><%= note.content %></div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <a href="/notes" class="btn btn-secondary">&#8592; Retour aux notes</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:12px; color:var(--text-dim); font-weight:500; text-transform:uppercase; letter-spacing:.04em; margin-bottom:12px;">Correction appliquee — server.js</div>
+    <div class="terminal-output" style="color:var(--yellow);">// AVANT (vulnerable)
+const note = notes.find(n => n.id === parseInt(req.params.id));
+// Pas de verification du proprietaire !</div>
+    <div style="margin-top:12px; padding:12px 16px; background:rgba(45,186,114,.07); border:1px solid rgba(45,186,114,.2); border-radius:5px;">
+      <div style="font-size:12px; color:var(--green); font-weight:500; margin-bottom:6px;">APRES (corrige)</div>
+      <div class="terminal-output" style="margin-top:0; color:var(--green);">// Verification d'appartenance obligatoire
+if (note.userId !== req.session.user.id && req.session.user.role !== 'admin')
+  return res.status(403).render('error', { message: 'Acces interdit' });</div>
+    </div>
+  </div>
+
+</main>
+<%- include('partials/footer') %>
+</body>
+</html>
