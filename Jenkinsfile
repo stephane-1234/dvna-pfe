@@ -7,6 +7,7 @@ pipeline {
         APP_URL      = "http://localhost:9090"
         DASHBOARD    = "http://localhost:3500/api/report"
         BUILD_BRANCH = "master"
+        GITLEAKS     = "C:\\Users\\asngo\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\\gitleaks.exe"
     }
 
     stages {
@@ -16,7 +17,7 @@ pipeline {
                 echo '=== Scan des secrets hardcodes ==='
                 script {
                     def output = bat(
-                        script: 'gitleaks.exe detect --source . --config .gitleaks.toml -v 2>&1 || exit 0',
+                        script: '"%GITLEAKS%" detect --source . --config .gitleaks.toml -v 2>&1 || exit 0',
                         returnStdout: true
                     ).trim()
                     def status = (output.contains('leaks found') && !output.contains('leaks found: 0')) ? 'warning' : 'success'
