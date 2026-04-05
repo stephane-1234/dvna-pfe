@@ -1,3 +1,5 @@
+import groovy.json.JsonOutput
+
 pipeline {
     agent any
 
@@ -115,29 +117,26 @@ pipeline {
 
 def sendToDashboard(String tool, String content, String status) {
     try {
-        // Ecrire le contenu dans un fichier temporaire JSON
-        def jsonFile = "report_temp_${tool.replaceAll('[^a-zA-Z0-9]', '_')}.json"
-        
-        // Construire le JSON proprement avec writeJSON via un map Groovy
-        def reportMap = [
+        def jsonStr = JsonOutput.toJson([
             tool   : tool,
             build  : env.BUILD_NUMBER,
             branch : env.BUILD_BRANCH ?: 'master',
             content: content,
             status : status
-        ]
-        
-        writeJSON file: jsonFile, json: reportMap
-        
+        ])
+
+        def jsonFile = "report_${tool.replaceAll('[^a-zA-Z0-9]', '_')}.json"
+        writeFile file: jsonFile, text: jsonStr
+
         bat """
-            curl -s -X POST ${env.DASHBOARD} ^
+            curl -s -X POST %DASHBOARD% ^
             -H "Content-Type: application/json" ^
             --data-binary @${jsonFile} ^
-            > nul 2>&1
+            > nul 2>&1 || exit 0
         """
-        
+
         bat "del ${jsonFile} > nul 2>&1 || exit 0"
-        
+
     } catch(e) {
         echo "Envoi dashboard echoue pour ${tool}: ${e.message}"
     }
