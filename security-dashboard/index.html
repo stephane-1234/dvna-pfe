@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevSecOps Security Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0f14; color: #cdd0e0; min-height: 100vh; }
+
+    .topbar { background: #141720; border-bottom: 1px solid #2a2d3e; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    .topbar h1 { font-size: 18px; font-weight: 500; color: #fff; }
+    .topbar .status { font-size: 12px; color: #6b7094; display: flex; align-items: center; gap: 6px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #2dba72; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .main { display: grid; grid-template-columns: 320px 1fr; min-height: calc(100vh - 57px); }
+
+    .sidebar { background: #141720; border-right: 1px solid #2a2d3e; padding: 1rem; overflow-y: auto; }
+    .sidebar h2 { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; color: #6b7094; margin-bottom: 12px; }
+
+    .api-section { margin-bottom: 1.5rem; }
+    .api-section label { display: block; font-size: 12px; color: #6b7094; margin-bottom: 6px; }
+    .api-section input { width: 100%; background: #1c1f2b; border: 1px solid #2a2d3e; border-radius: 6px; padding: 8px 10px; color: #cdd0e0; font-size: 12px; font-family: monospace; outline: none; }
+    .api-section input:focus { border-color: #4a9eff; }
+
+    .report-item { background: #1c1f2b; border: 1px solid #2a2d3e; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: all .15s; }
+    .report-item:hover, .report-item.active { border-color: #e85d30; background: rgba(232,93,48,.08); }
+    .report-item .ri-tool { font-size: 13px; font-weight: 500; color: #fff; margin-bottom: 4px; }
+    .report-item .ri-meta { font-size: 11px; color: #6b7094; }
+    .report-item .ri-build { font-size: 11px; color: #4a9eff; margin-top: 2px; }
+
+    .badge-status { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+    .badge-ok    { background: rgba(45,186,114,.15); color: #2dba72; }
+    .badge-warn  { background: rgba(245,197,66,.15); color: #f5c542; }
+    .badge-fail  { background: rgba(232,64,64,.15);  color: #e84040; }
+
+    .content { padding: 1.5rem; overflow-y: auto; }
+    .empty-state { text-align: center; padding: 4rem 2rem; color: #6b7094; }
+    .empty-state .icon { font-size: 48px; margin-bottom: 1rem; }
+    .empty-state p { font-size: 14px; line-height: 1.6; }
+
+    .report-header { margin-bottom: 1.5rem; }
+    .report-header h2 { font-size: 18px; font-weight: 500; color: #fff; margin-bottom: 4px; }
+    .report-header .meta { font-size: 12px; color: #6b7094; }
+
+    .btn-analyze { background: #e85d30; color: #fff; border: none; border-radius: 6px; padding: 10px 20px; font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: 1.5rem; transition: background .15s; }
+    .btn-analyze:hover { background: #d14e24; }
+    .btn-analyze:disabled { opacity: .4; cursor: not-allowed; }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+    .stat { background: #1c1f2b; border-radius: 8px; padding: 1rem; text-align: center; }
+    .stat-num { font-size: 26px; font-weight: 500; }
+    .stat-lbl { font-size: 11px; color: #6b7094; margin-top: 4px; }
+
+    .raw-report { background: #1c1f2b; border: 1px solid #2a2d3e; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; }
+    .raw-report pre { font-family: monospace; font-size: 11px; color: #6b7094; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+    .raw-toggle { font-size: 12px; color: #4a9eff; cursor: pointer; margin-bottom: 8px; display: block; }
+
+    .vuln-card { background: #1c1f2b; border: 1px solid #2a2d3e; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+    .vuln-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .badge { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; }
+    .badge.critique   { background: rgba(232,64,64,.15);  color: #e84040; border: 1px solid rgba(232,64,64,.3); }
+    .badge.importante { background: rgba(245,197,66,.15); color: #f5c542; border: 1px solid rgba(245,197,66,.3); }
+    .badge.moderee    { background: rgba(74,158,255,.15); color: #4a9eff; border: 1px solid rgba(74,158,255,.3); }
+    .vuln-title { font-size: 14px; font-weight: 500; color: #fff; flex: 1; }
+    .vuln-tool  { font-size: 11px; color: #6b7094; }
+    .section-lbl { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; color: #6b7094; margin-bottom: 6px; }
+    .vuln-desc { font-size: 13px; color: #9499bb; line-height: 1.6; margin-bottom: 12px; }
+    .fix-box { background: #141720; border-radius: 6px; padding: 12px 14px; margin-bottom: 12px; }
+    .fix-desc { font-size: 13px; color: #9499bb; margin-bottom: 8px; }
+    pre.code { background: #0d0f14; border: 1px solid #2a2d3e; border-radius: 6px; padding: 10px 12px; font-family: monospace; font-size: 12px; color: #2dba72; white-space: pre-wrap; }
+    .action-row { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #2a2d3e; }
+    .btn-accept { flex:1; padding:8px; border-radius:6px; border:1px solid rgba(45,186,114,.4); background:rgba(45,186,114,.1); color:#2dba72; cursor:pointer; font-size:13px; font-weight:500; }
+    .btn-accept:hover { background:rgba(45,186,114,.2); }
+    .btn-reject { flex:1; padding:8px; border-radius:6px; border:1px solid #2a2d3e; background:#1c1f2b; color:#6b7094; cursor:pointer; font-size:13px; }
+    .btn-reject:hover { color:#cdd0e0; }
+    .status-accepted { margin-top:12px; padding:10px; border-radius:6px; background:rgba(45,186,114,.1); border:1px solid rgba(45,186,114,.3); color:#2dba72; font-size:13px; text-align:center; }
+    .status-rejected  { margin-top:12px; padding:10px; border-radius:6px; background:#141720; color:#6b7094; font-size:13px; text-align:center; border:1px solid #2a2d3e; }
+
+    .loading { text-align:center; padding:2rem; color:#6b7094; font-size:14px; }
+    .spinner { display:inline-block; width:18px; height:18px; border:2px solid #2a2d3e; border-top-color:#4a9eff; border-radius:50%; animation:spin .8s linear infinite; vertical-align:middle; margin-right:8px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .btn-refresh { background: transparent; border: 1px solid #2a2d3e; color: #6b7094; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; margin-bottom: 12px; width: 100%; }
+    .btn-refresh:hover { color: #cdd0e0; border-color: #6b7094; }
+    .btn-clear { background: transparent; border: 1px solid rgba(232,64,64,.3); color: #e84040; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; margin-bottom: 12px; width: 100%; }
+    .btn-clear:hover { background: rgba(232,64,64,.1); }
+
+    .no-reports { text-align:center; padding:2rem 1rem; color:#6b7094; font-size:13px; line-height:1.6; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>DevSecOps Security Dashboard</h1>
+  <div class="status">
+    <div class="dot"></div>
+    <span id="statusText">En attente des rapports Jenkins...</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="api-section">
+      <label>Cle API Claude (Anthropic)</label>
+      <input type="password" id="apiKey" placeholder="sk-ant-api03-..." />
+    </div>
+
+    <h2>Rapports recus</h2>
+    <button class="btn-refresh" onclick="loadReports()">Actualiser</button>
+    <button class="btn-clear" onclick="clearReports()">Effacer tout</button>
+    <div id="reportsList">
+      <div class="no-reports">Aucun rapport recu.<br>Lancez votre pipeline Jenkins.</div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="mainContent">
+    <div class="empty-state">
+      <div class="icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2a2d3e" stroke-width="1.5">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <p>Selectionnez un rapport dans la liste de gauche<br>pour lancer l'analyse IA.</p>
+      <p style="margin-top:1rem;font-size:12px">Les rapports arrivent automatiquement depuis Jenkins.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const SERVER = 'http://localhost:3500';
+  let currentReport = null;
+  let allReports = [];
+
+  async function loadReports() {
+    try {
+      const res = await fetch(`${SERVER}/api/reports`);
+      const data = await res.json();
+      allReports = data.reports || [];
+      renderSidebar();
+      if (data.lastUpdate) {
+        document.getElementById('statusText').textContent =
+          'Dernier rapport : ' + new Date(data.lastUpdate).toLocaleTimeString();
+      }
+    } catch(e) {
+      document.getElementById('statusText').textContent = 'Serveur non disponible';
+    }
+  }
+
+  function renderSidebar() {
+    const list = document.getElementById('reportsList');
+    if (!allReports.length) {
+      list.innerHTML = '<div class="no-reports">Aucun rapport recu.<br>Lancez votre pipeline Jenkins.</div>';
+      return;
+    }
+
+    const statusBadge = s => {
+      if (s === 'success') return '<span class="badge-status badge-ok">OK</span>';
+      if (s === 'warning') return '<span class="badge-status badge-warn">WARN</span>';
+      return '<span class="badge-status badge-fail">FAIL</span>';
+    };
+
+    list.innerHTML = allReports.map((r, i) => `
+      <div class="report-item ${currentReport && currentReport.id === r.id ? 'active' : ''}"
+           onclick="selectReport(${i})">
+        <div class="ri-tool">${r.tool} ${statusBadge(r.status)}</div>
+        <div class="ri-build">Build #${r.build} — ${r.branch}</div>
+        <div class="ri-meta">${new Date(r.timestamp).toLocaleString()}</div>
+      </div>
+    `).join('');
+  }
+
+  function selectReport(idx) {
+    currentReport = allReports[idx];
+    renderSidebar();
+    showReportView(currentReport);
+  }
+
+  function showReportView(report) {
+    document.getElementById('mainContent').innerHTML = `
+      <div class="report-header">
+        <h2>${report.tool}</h2>
+        <div class="meta">Build #${report.build} — Branche : ${report.branch} — ${new Date(report.timestamp).toLocaleString()}</div>
+      </div>
+
+      <button class="btn-analyze" id="analyzeBtn" onclick="analyzeWithAI()">
+        Analyser avec Claude AI
+      </button>
+
+      <div class="raw-report">
+        <span class="raw-toggle" onclick="toggleRaw()">Voir le rapport brut</span>
+        <pre id="rawPre" style="display:none">${escapeHtml(report.content)}</pre>
+      </div>
+
+      <div id="aiResults"></div>
+    `;
+  }
+
+  function toggleRaw() {
+    const pre = document.getElementById('rawPre');
+    pre.style.display = pre.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  async function analyzeWithAI() {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    if (!apiKey) { alert('Entrez votre cle API Anthropic dans la barre laterale.'); return; }
+    if (!currentReport) return;
+
+    document.getElementById('analyzeBtn').disabled = true;
+    document.getElementById('aiResults').innerHTML =
+      '<div class="loading"><span class="spinner"></span>Claude analyse le rapport...</div>';
+
+    const prompt = `Tu es un expert DevSecOps. Analyse ce rapport de securite et retourne UNIQUEMENT un JSON valide sans markdown ni backticks:
+{
+  "vulnerabilities": [
+    {
+      "id": "VULN-001",
+      "title": "titre court",
+      "severity": "Critique|Importante|Moderee",
+      "tool": "outil",
+      "description": "explication simple 1-2 phrases pour non-technicien",
+      "file": "fichier:ligne ou vide",
+      "fix_description": "correction en 1 phrase simple",
+      "fix_code": "code correction 2-5 lignes"
+    }
+  ]
+}
+
+Outil : ${currentReport.tool}
+Build : ${currentReport.build}
+Rapport :
+${currentReport.content}
+
+Retourne UNIQUEMENT le JSON valide.`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1500,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error?.message || 'Erreur ' + response.status);
+      }
+
+      const data = await response.json();
+      const text = data.content[0].text.trim().replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(text);
+      renderVulns(parsed.vulnerabilities || []);
+
+    } catch(e) {
+      document.getElementById('aiResults').innerHTML =
+        `<div style="color:#e84040;font-size:13px;padding:1rem;background:rgba(232,64,64,.1);border-radius:8px">Erreur : ${e.message}</div>`;
+    }
+
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+
+  function renderVulns(vulns) {
+    if (!vulns.length) {
+      document.getElementById('aiResults').innerHTML =
+        '<div style="color:#2dba72;text-align:center;padding:2rem">Aucune vulnerabilite detectee dans ce rapport.</div>';
+      return;
+    }
+
+    const c = vulns.filter(v => v.severity==='Critique').length;
+    const i = vulns.filter(v => v.severity==='Importante').length;
+    const m = vulns.filter(v => v.severity==='Moderee').length;
+
+    const bc = { 'Critique':'critique', 'Importante':'importante', 'Moderee':'moderee' };
+
+    document.getElementById('aiResults').innerHTML = `
+      <div class="stats">
+        <div class="stat"><div class="stat-num" style="color:#e84040">${c}</div><div class="stat-lbl">Critiques</div></div>
+        <div class="stat"><div class="stat-num" style="color:#f5c542">${i}</div><div class="stat-lbl">Importantes</div></div>
+        <div class="stat"><div class="stat-num" style="color:#4a9eff">${m}</div><div class="stat-lbl">Moderees</div></div>
+      </div>
+      ${vulns.map((v, idx) => `
+        <div class="vuln-card">
+          <div class="vuln-header">
+            <span class="badge ${bc[v.severity]||'moderee'}">${v.severity}</span>
+            <span class="vuln-title">${v.title}</span>
+            <span class="vuln-tool">${v.tool}</span>
+          </div>
+          <div class="section-lbl">Vulnerabilite detectee</div>
+          <div class="vuln-desc">
+            ${v.description}
+            ${v.file ? `<br><small style="font-family:monospace;color:#6b7094">${v.file}</small>` : ''}
+          </div>
+          <div class="fix-box">
+            <div class="section-lbl">Correction proposee par Claude AI</div>
+            <div class="fix-desc">${v.fix_description}</div>
+            <pre class="code">${escapeHtml(v.fix_code)}</pre>
+          </div>
+          <div class="action-row" id="act-${idx}">
+            <button class="btn-accept" onclick="acceptFix(${idx})">Accepter la correction</button>
+            <button class="btn-reject" onclick="rejectFix(${idx})">Ignorer</button>
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  function acceptFix(i) {
+    document.getElementById('act-'+i).outerHTML =
+      '<div class="status-accepted">Correction acceptee — a appliquer dans le code source</div>';
+  }
+  function rejectFix(i) {
+    document.getElementById('act-'+i).outerHTML =
+      '<div class="status-rejected">Correction ignoree</div>';
+  }
+
+  async function clearReports() {
+    if (!confirm('Effacer tous les rapports ?')) return;
+    await fetch(`${SERVER}/api/reports`, { method: 'DELETE' });
+    currentReport = null;
+    allReports = [];
+    renderSidebar();
+    document.getElementById('mainContent').innerHTML =
+      '<div class="empty-state"><p>Rapports effaces.</p></div>';
+  }
+
+  // Actualisation automatique toutes les 10 secondes
+  loadReports();
+  setInterval(loadReports, 10000);
+</script>
+</body>
+</html>
