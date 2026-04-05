@@ -19,10 +19,22 @@
     .sidebar { background: #141720; border-right: 1px solid #2a2d3e; padding: 1rem; overflow-y: auto; }
     .sidebar h2 { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; color: #6b7094; margin-bottom: 12px; }
 
-    .api-section { margin-bottom: 1.5rem; }
-    .api-section label { display: block; font-size: 12px; color: #6b7094; margin-bottom: 6px; }
-    .api-section input { width: 100%; background: #1c1f2b; border: 1px solid #2a2d3e; border-radius: 6px; padding: 8px 10px; color: #cdd0e0; font-size: 12px; font-family: monospace; outline: none; }
-    .api-section input:focus { border-color: #4a9eff; }
+    .llm-section { margin-bottom: 1.5rem; background: #1c1f2b; border-radius: 8px; padding: 12px; }
+    .llm-section label { display: block; font-size: 12px; color: #6b7094; margin-bottom: 6px; }
+    .llm-section select, .llm-section input {
+      width: 100%; background: #141720; border: 1px solid #2a2d3e;
+      border-radius: 6px; padding: 7px 10px; color: #cdd0e0;
+      font-size: 12px; outline: none; margin-bottom: 8px;
+    }
+    .llm-section select:focus, .llm-section input:focus { border-color: #4a9eff; }
+
+    .mode-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+    .mode-tab { flex: 1; padding: 6px; border-radius: 5px; border: 1px solid #2a2d3e; background: #141720; color: #6b7094; cursor: pointer; font-size: 12px; text-align: center; transition: all .15s; }
+    .mode-tab.active { background: #e85d30; color: #fff; border-color: #e85d30; }
+
+    .ollama-status { font-size: 11px; padding: 5px 8px; border-radius: 5px; margin-top: 4px; }
+    .ollama-ok   { background: rgba(45,186,114,.1); color: #2dba72; border: 1px solid rgba(45,186,114,.3); }
+    .ollama-fail { background: rgba(232,64,64,.1);  color: #e84040; border: 1px solid rgba(232,64,64,.3); }
 
     .report-item { background: #1c1f2b; border: 1px solid #2a2d3e; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: all .15s; }
     .report-item:hover, .report-item.active { border-color: #e85d30; background: rgba(232,93,48,.08); }
@@ -32,13 +44,11 @@
 
     .badge-status { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
     .badge-ok    { background: rgba(45,186,114,.15); color: #2dba72; }
-    .badge-warn  { background: rgba(245,197,66,.15); color: #f5c542; }
-    .badge-fail  { background: rgba(232,64,64,.15);  color: #e84040; }
+    .badge-warn  { background: rgba(245,197,66,.15);  color: #f5c542; }
+    .badge-fail  { background: rgba(232,64,64,.15);   color: #e84040; }
 
     .content { padding: 1.5rem; overflow-y: auto; }
     .empty-state { text-align: center; padding: 4rem 2rem; color: #6b7094; }
-    .empty-state .icon { font-size: 48px; margin-bottom: 1rem; }
-    .empty-state p { font-size: 14px; line-height: 1.6; }
 
     .report-header { margin-bottom: 1.5rem; }
     .report-header h2 { font-size: 18px; font-weight: 500; color: #fff; margin-bottom: 4px; }
@@ -82,12 +92,13 @@
     .spinner { display:inline-block; width:18px; height:18px; border:2px solid #2a2d3e; border-top-color:#4a9eff; border-radius:50%; animation:spin .8s linear infinite; vertical-align:middle; margin-right:8px; }
     @keyframes spin { to { transform:rotate(360deg); } }
 
-    .btn-refresh { background: transparent; border: 1px solid #2a2d3e; color: #6b7094; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; margin-bottom: 12px; width: 100%; }
+    .btn-refresh { background: transparent; border: 1px solid #2a2d3e; color: #6b7094; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; margin-bottom: 8px; width: 100%; }
     .btn-refresh:hover { color: #cdd0e0; border-color: #6b7094; }
     .btn-clear { background: transparent; border: 1px solid rgba(232,64,64,.3); color: #e84040; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; margin-bottom: 12px; width: 100%; }
     .btn-clear:hover { background: rgba(232,64,64,.1); }
-
     .no-reports { text-align:center; padding:2rem 1rem; color:#6b7094; font-size:13px; line-height:1.6; }
+    .btn-test { background: transparent; border: 1px solid #4a9eff; color: #4a9eff; border-radius: 6px; padding: 5px 10px; font-size: 11px; cursor: pointer; width: 100%; margin-top: 4px; }
+    .btn-test:hover { background: rgba(74,158,255,.1); }
   </style>
 </head>
 <body>
@@ -104,9 +115,37 @@
 
   <!-- Sidebar -->
   <div class="sidebar">
-    <div class="api-section">
-      <label>Cle API Claude (Anthropic)</label>
-      <input type="password" id="apiKey" placeholder="sk-ant-api03-..." />
+
+    <!-- Configuration LLM -->
+    <div class="llm-section">
+      <div style="font-size:12px;font-weight:500;color:#cdd0e0;margin-bottom:10px">Configuration IA</div>
+
+      <div class="mode-tabs">
+        <div class="mode-tab active" id="tab-ollama" onclick="switchMode('ollama')">Ollama (local)</div>
+        <div class="mode-tab" id="tab-claude" onclick="switchMode('claude')">Claude API</div>
+      </div>
+
+      <!-- Ollama config -->
+      <div id="config-ollama">
+        <label>Modele Ollama</label>
+        <select id="ollamaModel">
+          <option value="qwen2.5-coder:14b" selected>qwen2.5-coder:14b (recommande)</option>
+          <option value="qwen2.5-coder:7b">qwen2.5-coder:7b</option>
+          <option value="llama3.1:8b">llama3.1:8b</option>
+          <option value="mistral:7b">mistral:7b</option>
+          <option value="codellama:13b">codellama:13b</option>
+        </select>
+        <label>URL Ollama</label>
+        <input type="text" id="ollamaUrl" value="http://localhost:11434" />
+        <button class="btn-test" onclick="testOllama()">Tester la connexion</button>
+        <div id="ollamaStatus"></div>
+      </div>
+
+      <!-- Claude config -->
+      <div id="config-claude" style="display:none">
+        <label>Cle API Anthropic</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-api03-..." />
+      </div>
     </div>
 
     <h2>Rapports recus</h2>
@@ -120,13 +159,8 @@
   <!-- Content -->
   <div class="content" id="mainContent">
     <div class="empty-state">
-      <div class="icon">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2a2d3e" stroke-width="1.5">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-      </div>
-      <p>Selectionnez un rapport dans la liste de gauche<br>pour lancer l'analyse IA.</p>
-      <p style="margin-top:1rem;font-size:12px">Les rapports arrivent automatiquement depuis Jenkins.</p>
+      <p style="font-size:16px;color:#cdd0e0;margin-bottom:8px">Selectionnez un rapport</p>
+      <p>Les rapports arrivent automatiquement depuis Jenkins.<br>Cliquez sur un rapport pour lancer l'analyse IA.</p>
     </div>
   </div>
 
@@ -136,6 +170,29 @@
   const SERVER = 'http://localhost:3500';
   let currentReport = null;
   let allReports = [];
+  let currentMode = 'ollama';
+
+  function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('tab-ollama').className = 'mode-tab' + (mode === 'ollama' ? ' active' : '');
+    document.getElementById('tab-claude').className  = 'mode-tab' + (mode === 'claude'  ? ' active' : '');
+    document.getElementById('config-ollama').style.display = mode === 'ollama' ? 'block' : 'none';
+    document.getElementById('config-claude').style.display = mode === 'claude'  ? 'block' : 'none';
+  }
+
+  async function testOllama() {
+    const url = document.getElementById('ollamaUrl').value.trim();
+    const statusEl = document.getElementById('ollamaStatus');
+    statusEl.innerHTML = '<div class="ollama-status" style="color:#6b7094">Test en cours...</div>';
+    try {
+      const res = await fetch(`${url}/api/tags`);
+      const data = await res.json();
+      const models = (data.models || []).map(m => m.name).join(', ');
+      statusEl.innerHTML = `<div class="ollama-status ollama-ok">Ollama OK — Modeles: ${models || 'aucun'}</div>`;
+    } catch(e) {
+      statusEl.innerHTML = `<div class="ollama-status ollama-fail">Ollama non accessible. Verifiez qu'il tourne sur ${url}</div>`;
+    }
+  }
 
   async function loadReports() {
     try {
@@ -158,16 +215,13 @@
       list.innerHTML = '<div class="no-reports">Aucun rapport recu.<br>Lancez votre pipeline Jenkins.</div>';
       return;
     }
-
     const statusBadge = s => {
       if (s === 'success') return '<span class="badge-status badge-ok">OK</span>';
       if (s === 'warning') return '<span class="badge-status badge-warn">WARN</span>';
       return '<span class="badge-status badge-fail">FAIL</span>';
     };
-
     list.innerHTML = allReports.map((r, i) => `
-      <div class="report-item ${currentReport && currentReport.id === r.id ? 'active' : ''}"
-           onclick="selectReport(${i})">
+      <div class="report-item ${currentReport && currentReport.id === r.id ? 'active' : ''}" onclick="selectReport(${i})">
         <div class="ri-tool">${r.tool} ${statusBadge(r.status)}</div>
         <div class="ri-build">Build #${r.build} — ${r.branch}</div>
         <div class="ri-meta">${new Date(r.timestamp).toLocaleString()}</div>
@@ -187,16 +241,13 @@
         <h2>${report.tool}</h2>
         <div class="meta">Build #${report.build} — Branche : ${report.branch} — ${new Date(report.timestamp).toLocaleString()}</div>
       </div>
-
       <button class="btn-analyze" id="analyzeBtn" onclick="analyzeWithAI()">
-        Analyser avec Claude AI
+        Analyser avec ${currentMode === 'ollama' ? 'Ollama (local)' : 'Claude API'}
       </button>
-
       <div class="raw-report">
         <span class="raw-toggle" onclick="toggleRaw()">Voir le rapport brut</span>
         <pre id="rawPre" style="display:none">${escapeHtml(report.content)}</pre>
       </div>
-
       <div id="aiResults"></div>
     `;
   }
@@ -207,17 +258,14 @@
   }
 
   function escapeHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   async function analyzeWithAI() {
-    const apiKey = document.getElementById('apiKey').value.trim();
-    if (!apiKey) { alert('Entrez votre cle API Anthropic dans la barre laterale.'); return; }
     if (!currentReport) return;
-
     document.getElementById('analyzeBtn').disabled = true;
     document.getElementById('aiResults').innerHTML =
-      '<div class="loading"><span class="spinner"></span>Claude analyse le rapport...</div>';
+      `<div class="loading"><span class="spinner"></span>Analyse en cours avec ${currentMode === 'ollama' ? 'Ollama' : 'Claude'}...</div>`;
 
     const prompt = `Tu es un expert DevSecOps. Analyse ce rapport de securite et retourne UNIQUEMENT un JSON valide sans markdown ni backticks:
 {
@@ -243,34 +291,66 @@ ${currentReport.content}
 Retourne UNIQUEMENT le JSON valide.`;
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1500,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
+      let text = '';
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error?.message || 'Erreur ' + response.status);
+      if (currentMode === 'ollama') {
+        const ollamaUrl = document.getElementById('ollamaUrl').value.trim();
+        const model = document.getElementById('ollamaModel').value;
+
+        const res = await fetch(`${ollamaUrl}/api/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: model,
+            prompt: prompt,
+            stream: false,
+            options: { temperature: 0.1 }
+          })
+        });
+
+        if (!res.ok) throw new Error('Ollama erreur ' + res.status);
+        const data = await res.json();
+        text = data.response || '';
+
+      } else {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        if (!apiKey) { alert('Entrez votre cle API Anthropic.'); return; }
+
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 1500,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+
+        if (!res.ok) throw new Error('Claude erreur ' + res.status);
+        const data = await res.json();
+        text = data.content[0].text || '';
       }
 
-      const data = await response.json();
-      const text = data.content[0].text.trim().replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(text);
+      const clean = text.replace(/```json|```/g, '').trim();
+      const jsonStart = clean.indexOf('{');
+      const jsonEnd = clean.lastIndexOf('}');
+      const jsonStr = clean.substring(jsonStart, jsonEnd + 1);
+      const parsed = JSON.parse(jsonStr);
       renderVulns(parsed.vulnerabilities || []);
 
     } catch(e) {
       document.getElementById('aiResults').innerHTML =
-        `<div style="color:#e84040;font-size:13px;padding:1rem;background:rgba(232,64,64,.1);border-radius:8px">Erreur : ${e.message}</div>`;
+        `<div style="color:#e84040;font-size:13px;padding:1rem;background:rgba(232,64,64,.1);border-radius:8px">
+          Erreur : ${e.message}<br>
+          <small style="color:#6b7094;margin-top:4px;display:block">
+            ${currentMode === 'ollama' ? 'Verifiez qu\'Ollama tourne : ollama serve' : 'Verifiez votre cle API'}
+          </small>
+        </div>`;
     }
 
     document.getElementById('analyzeBtn').disabled = false;
@@ -286,7 +366,6 @@ Retourne UNIQUEMENT le JSON valide.`;
     const c = vulns.filter(v => v.severity==='Critique').length;
     const i = vulns.filter(v => v.severity==='Importante').length;
     const m = vulns.filter(v => v.severity==='Moderee').length;
-
     const bc = { 'Critique':'critique', 'Importante':'importante', 'Moderee':'moderee' };
 
     document.getElementById('aiResults').innerHTML = `
@@ -308,7 +387,7 @@ Retourne UNIQUEMENT le JSON valide.`;
             ${v.file ? `<br><small style="font-family:monospace;color:#6b7094">${v.file}</small>` : ''}
           </div>
           <div class="fix-box">
-            <div class="section-lbl">Correction proposee par Claude AI</div>
+            <div class="section-lbl">Correction proposee par l'IA locale</div>
             <div class="fix-desc">${v.fix_description}</div>
             <pre class="code">${escapeHtml(v.fix_code)}</pre>
           </div>
@@ -340,7 +419,6 @@ Retourne UNIQUEMENT le JSON valide.`;
       '<div class="empty-state"><p>Rapports effaces.</p></div>';
   }
 
-  // Actualisation automatique toutes les 10 secondes
   loadReports();
   setInterval(loadReports, 10000);
 </script>
