@@ -115,21 +115,29 @@ pipeline {
 
 def sendToDashboard(String tool, String content, String status) {
     try {
-        def safe = content
-            .replace('\\', '\\\\')
-            .replace('"', '\\"')
-            .replace('\r\n', '\\n')
-            .replace('\n', '\\n')
-            .replace('\r', '\\n')
-        if (safe.length() > 8000) {
-            safe = safe.substring(0, 8000) + '\\n... [tronque]'
-        }
+        // Ecrire le contenu dans un fichier temporaire JSON
+        def jsonFile = "report_temp_${tool.replaceAll('[^a-zA-Z0-9]', '_')}.json"
+        
+        // Construire le JSON proprement avec writeJSON via un map Groovy
+        def reportMap = [
+            tool   : tool,
+            build  : env.BUILD_NUMBER,
+            branch : env.BUILD_BRANCH ?: 'master',
+            content: content,
+            status : status
+        ]
+        
+        writeJSON file: jsonFile, json: reportMap
+        
         bat """
             curl -s -X POST ${env.DASHBOARD} ^
             -H "Content-Type: application/json" ^
-            -d "{\\"tool\\":\\"${tool}\\",\\"build\\":\\"${env.BUILD_NUMBER}\\",\\"branch\\":\\"${env.BUILD_BRANCH}\\",\\"content\\":\\"${safe}\\",\\"status\\":\\"${status}\\"}" ^
+            --data-binary @${jsonFile} ^
             > nul 2>&1
         """
+        
+        bat "del ${jsonFile} > nul 2>&1 || exit 0"
+        
     } catch(e) {
         echo "Envoi dashboard echoue pour ${tool}: ${e.message}"
     }
