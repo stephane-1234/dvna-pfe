@@ -8,6 +8,11 @@ pipeline {
         DASHBOARD    = "http://localhost:3500/api/report"
         BUILD_BRANCH = "master"
         GITLEAKS     = "C:\\Users\\asngo\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe\\gitleaks.exe"
+
+        // Fix encodage UTF-8
+        JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8'
+        PYTHONIOENCODING  = 'UTF-8'
+        PYTHONUTF8        = '1'
     }
 
     stages {
@@ -47,7 +52,7 @@ pipeline {
                 echo '=== Analyse des dependances ==='
                 script {
                     def output = bat(
-                        script: 'npm audit 2>&1 || exit 0',
+                        script: 'npm audit --unicode=false 2>&1 || exit 0',
                         returnStdout: true
                     ).trim()
                     def status = (output.contains('critical') || output.contains('high')) ? 'warning' : 'success'
