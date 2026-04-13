@@ -37,7 +37,6 @@ pipeline {
                 echo '=== Analyse statique du code ==='
                 script {
                     def output = bat(
-                        // Utilisation de --json pour éviter tout caractère graphique
                         script: '''@chcp 65001 > nul
                                    docker run --rm -v "%CD%:/src" returntocorp/semgrep semgrep ^
                                    --config=p/nodejs --config=p/security-audit ^
@@ -57,13 +56,11 @@ pipeline {
                 echo '=== Analyse des dependances ==='
                 script {
                     def output = bat(
-                        script: '''@chcp 65001 > nul
-                                   npm audit --unicode=false 2>&1 || exit 0''',
+                        script: '@chcp 65001 > nul && npm audit --json 2>&1 || exit 0',
                         returnStdout: true
                     ).trim()
-                    def status = (output.contains('critical') || output.contains('high')) ? 'warning' : 'success'
+                    def status = (output.contains('"critical"') || output.contains('"high"')) ? 'warning' : 'success'
                     sendToDashboard("npm audit", output, status)
-                    echo output
                 }
             }
         }
@@ -154,7 +151,7 @@ def sendToDashboard(String tool, String content, String status) {
         ])
 
         def jsonFile = "report_${tool.replaceAll('[^a-zA-Z0-9]', '_')}.json"
-        writeFile file: jsonFile, text: jsonStr, encoding: 'UTF-8'  // AJOUT encoding
+        writeFile file: jsonFile, text: jsonStr, encoding: 'UTF-8'
 
         bat """
             @chcp 65001 > nul
